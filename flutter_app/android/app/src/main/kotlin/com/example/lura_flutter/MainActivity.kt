@@ -14,7 +14,7 @@ class MainActivity: FlutterActivity() {
     private var eventSink: EventChannel.EventSink? = null
 
     private inner class NativeOut: Output {
-        override fun OnLine(line: String?) {
+        override fun onLine(line: String?) {
             line?.let { eventSink?.success(it) }
         }
     }
@@ -29,16 +29,16 @@ class MainActivity: FlutterActivity() {
             when (call.method) {
                 "start" -> {
                     if (mobile == null) mobile = Mobile(NativeOut())
-                    mobile?.Start()
+                    mobile?.start()
                     result.success(null)
                 }
                 "send" -> {
                     val text = call.argument<String>("text") ?: ""
-                    mobile?.SendLine(text)
+                    mobile?.sendLine(text)
                     result.success(null)
                 }
                 "stop" -> {
-                    mobile?.Close()
+                    mobile?.close()
                     mobile = null
                     result.success(null)
                 }
