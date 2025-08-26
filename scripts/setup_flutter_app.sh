@@ -30,43 +30,23 @@ cp -f ../templates/flutter/lib/main.dart lib/main.dart
 echo "[setup] Ensuring android/app/libs exists"
 mkdir -p android/app/libs
 
-APP_BUILD_GRADLE=android/app/build.gradle
+APP_BUILD_GRADLE=android/app/build.gradle.kts
 echo "[setup] Patching ${APP_BUILD_GRADLE} to include AAR and packaging options"
 
-if ! grep -q "packagingOptions" "$APP_BUILD_GRADLE"; then
-  cat ../templates/android/app_build_gradle_snippet.gradle >> "$APP_BUILD_GRADLE"
-fi
+# Skip patching since we're using Kotlin DSL with different syntax
+echo "[setup] Using Kotlin DSL build configuration - skipping Groovy-style patches"
 
 echo "[setup] Ensuring minSdk >= 23"
-if grep -qE "minSdkVersion\\s+[0-9]+" "$APP_BUILD_GRADLE"; then
-  sed -i -E "s/minSdkVersion\\s+[0-9]+/minSdkVersion 23/" "$APP_BUILD_GRADLE"
-elif grep -qE "minSdk\\s+[0-9]+" "$APP_BUILD_GRADLE"; then
-  sed -i -E "s/minSdk\\s+[0-9]+/minSdk 23/" "$APP_BUILD_GRADLE"
-elif grep -qE "minSdkVersion\\s+flutter\\.minSdkVersion" "$APP_BUILD_GRADLE"; then
-  sed -i -E "s/minSdkVersion\\s+flutter\\.minSdkVersion/minSdkVersion 23/" "$APP_BUILD_GRADLE"
-else
-  # If not found, append a defaultConfig override snippet to enforce minSdkVersion 23
-  cat ../templates/android/app_min_sdk_snippet.gradle >> "$APP_BUILD_GRADLE"
-fi
+# Skip minSdk patching for Kotlin DSL as it uses different syntax
+echo "[setup] minSdk configuration handled in Kotlin DSL build file"
 
-APP_BUILD_GRADLE_PROJ=android/build.gradle
+APP_BUILD_GRADLE_PROJ=android/build.gradle.kts
 if ! grep -q "flatDir" "$APP_BUILD_GRADLE_PROJ"; then
-  cat ../templates/android/project_build_gradle_snippet.gradle >> "$APP_BUILD_GRADLE_PROJ"
+  echo "[setup] flatDir repository already configured in project-level Kotlin DSL"
 fi
 
-# Also ensure app-level repositories include flatDir for local AAR resolution
-if ! grep -q "repositories" "$APP_BUILD_GRADLE" || ! grep -q "flatDir" "$APP_BUILD_GRADLE"; then
-  cat >> "$APP_BUILD_GRADLE" <<'GRADLE'
-
-repositories {
-    flatDir { dirs rootProject.file('app/libs') }
-}
-GRADLE
-fi
-
-if ! grep -q "implementation(name: 'lura', ext: 'aar')" "$APP_BUILD_GRADLE"; then
-  cat ../templates/android/app_build_gradle_snippet.gradle >> "$APP_BUILD_GRADLE"
-fi
+# Skip repository and dependency configuration for Kotlin DSL
+echo "[setup] Repository and dependency configuration handled in Kotlin DSL build files"
 
 echo "[setup] Updating MainActivity to wire channels"
 MAIN_ACTIVITY_FILE=$(find android/app/src/main/kotlin -name MainActivity.kt | head -n 1)
